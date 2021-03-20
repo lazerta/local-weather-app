@@ -37,7 +37,7 @@ export class WeatherService {
             .set('appId', environment.appId);
         return this.http.get<ICurrentWeatherData>(
             environment.baseUrl, {params})
-            .pipe(map(this.transformToICurrentWeather))
+            .pipe(map(data => this.transformToICurrentWeather(data)))
     }
 
     private transformToICurrentWeather(data: ICurrentWeatherData): ICurrentWeather {
@@ -46,12 +46,12 @@ export class WeatherService {
             country: data.sys.country,
             date: data.dt * 1000,
             image: `http://openweathermap.org/img/w/${data.weather[0].icon}.png`,
-
-
+            temperature: this.convertKelvinToFahrenheit(data.main.temp),
+            description: data.weather[0].description,
         }
     }
 
-    private convertToKevinToFahrenheit(kevin: number): number {
-        return kevin * 9 / 5 - 459.64;
+    private convertKelvinToFahrenheit(kelvin: number): number {
+        return kelvin * 9 / 5 - 459.67
     }
 }

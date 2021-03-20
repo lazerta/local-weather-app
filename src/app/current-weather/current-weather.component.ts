@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import {ICurrentInterface} from 'app/interfaces';
+import {ICurrentWeather} from 'app/interfaces';
 import {WeatherService} from 'app/weather/weather.service';
+
 
 
 @Component({
@@ -9,7 +10,7 @@ import {WeatherService} from 'app/weather/weather.service';
     styleUrls: ['./current-weather.component.css']
 })
 export class CurrentWeatherComponent implements OnInit {
-    current: ICurrentInterface;
+    current: ICurrentWeather;
 
     constructor(private weatherService: WeatherService) {
     }

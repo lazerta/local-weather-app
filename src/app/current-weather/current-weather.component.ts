@@ -3,7 +3,6 @@ import {ICurrentWeather} from 'app/interfaces';
 import {WeatherService} from 'app/weather/weather.service';
 
 
-
 @Component({
     selector: 'app-current-weather',
     templateUrl: './current-weather.component.html',
@@ -19,5 +18,13 @@ export class CurrentWeatherComponent implements OnInit {
         this.weatherService
             .getCurrentWeather('New York', 'US')
             .subscribe(data => this.current = data)
+    }
+
+    getOrdinal(date: number) {
+        const n = new Date(date).getDate();
+        return n > 0
+            ? ['th', 'st', 'nd', 'rd'][(n > 3 && n < 21) ||
+            n % 10 > 3 ? 0 : n % 10]
+            : ''
     }
 }

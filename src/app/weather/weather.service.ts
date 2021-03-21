@@ -22,21 +22,53 @@ interface ICurrentWeatherData {
     name: string
 }
 
+export interface IWeatherService {
+    getCurrentWeather(
+        search: string | number,
+        country?: string
+    ): Observable<ICurrentWeather>
+
+    getCurrentWeatherByCoords(coords: Coordinates):
+        Observable<ICurrentWeather>
+}
+
 @Injectable({
     providedIn: 'root'
 })
-export class WeatherService {
+export class WeatherService implements IWeatherService {
 
     constructor(private http: HttpClient) {
     }
 
-    getCurrentWeather(city: string, country: string):Observable<ICurrentWeather> {
-        const params = new HttpParams()
-            .set('q', city)
-            .append('q', country)
-            .set('appId', environment.appId);
-        return this.http.get<ICurrentWeatherData>(
-            environment.baseUrl, {params})
+    getCurrentWeather(search: string | number, country?: string): Observable<ICurrentWeather> {
+        let uriParams = new HttpParams()
+        if (typeof search === 'string') {
+            uriParams = uriParams.set('q',
+                country ? `${search},${country}` : search
+            )
+        } else {
+            uriParams = uriParams.set('zip', 'search')
+        }
+
+        return this.getCurrentWeatherHelper(uriParams)
+    }
+
+    getCurrentWeatherByCoords(coords: Coordinates):
+        Observable<ICurrentWeather> {
+        const uriParams = new HttpParams()
+            .set('lat', coords.latitude.toString())
+            .set('lon', coords.longitude.toString())
+        return this.getCurrentWeatherHelper(uriParams)
+    }
+
+    private getCurrentWeatherHelper(uriParams: HttpParams):
+        Observable<ICurrentWeather> {
+        uriParams = uriParams.set('appid', environment.appId)
+        return this.http
+            .get<ICurrentWeatherData>(
+                environment.baseUrl,
+                {params: uriParams}
+            )
             .pipe(map(data => this.transformToICurrentWeather(data)))
     }
 

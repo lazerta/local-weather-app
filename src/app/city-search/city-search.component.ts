@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {WeatherService} from 'app/weather/weather.service';
-import {debounceTime} from 'rxjs/operators';
+import {debounceTime, filter, tap} from 'rxjs/operators';
 
 @Component({
     selector: 'app-city-search',
@@ -9,28 +9,32 @@ import {debounceTime} from 'rxjs/operators';
     styleUrls: ['./city-search.component.css']
 })
 export class CitySearchComponent implements OnInit {
-    search: FormControl = null;
+    search: FormControl = new FormControl('', {
+        validators: [Validators.required, Validators.minLength(4)],
+        updateOn: 'blur'
+    });
+
 
     constructor(private weatherService: WeatherService) {
     }
 
 
     ngOnInit(): void {
-        this.search = new FormControl('', {validators: [Validators.minLength(4)], updateOn: 'blur'},);
         this.search.valueChanges
-            .pipe(debounceTime(1000))
-            .subscribe((searchTerm: string) => this.searchForTerm(searchTerm));
+            .pipe(
+                debounceTime(1000),
+                filter(() => this.search.valid),
+                tap((value: string) => this.doSearch(value))
+            )
+            .subscribe();
     }
 
-    private searchForTerm(searchValue: string) {
-        if (searchValue && this.search.valid) {
 
-            const userInput = searchValue.split(',').map(s => s.trim());
-            this.weatherService.getCurrentWeather(
-                userInput[0],
-                userInput.length > 1 ? userInput[1] : undefined
-            ).subscribe(data => (console.log(data)))
-
-        }
+    private doSearch(term: string) {
+        const userInput = term.split(',').map(s => s.trim());
+        this.weatherService.updateCurrentWeather(
+            userInput[0],
+            userInput.length > 1 ? userInput[1] : undefined
+        );
     }
 }

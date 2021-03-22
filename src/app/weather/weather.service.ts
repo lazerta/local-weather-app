@@ -3,7 +3,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {environment} from 'environments/environment';
 import {ICurrentWeather} from 'app/interfaces';
 import {map} from 'rxjs/operators';
-import {Observable} from 'rxjs';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
 
 interface ICurrentWeatherData {
     weather: [
@@ -23,6 +23,8 @@ interface ICurrentWeatherData {
 }
 
 export interface IWeatherService {
+    readonly currentWeather$: BehaviorSubject<ICurrentWeather>;
+
     getCurrentWeather(
         search: string | number,
         country?: string
@@ -36,12 +38,20 @@ export interface IWeatherService {
     providedIn: 'root'
 })
 export class WeatherService implements IWeatherService {
+    currentWeather$ = new BehaviorSubject<ICurrentWeather>({
+        city: '--',
+        country: '--',
+        date: Date.now(),
+        image: '',
+        temperature: 0,
+        description: '',
+    });
 
     constructor(private http: HttpClient) {
     }
 
     getCurrentWeather(search: string | number, country?: string): Observable<ICurrentWeather> {
-        let uriParams = new HttpParams()
+        let uriParams = new HttpParams();
         if (typeof search === 'string') {
             uriParams = uriParams.set('q',
                 country ? `${search},${country}` : search
@@ -70,6 +80,11 @@ export class WeatherService implements IWeatherService {
                 {params: uriParams}
             )
             .pipe(map(data => this.transformToICurrentWeather(data)))
+    }
+
+     updateCurrentWeather(search: string | number, country?: string): void {
+        this.getCurrentWeather(search, country)
+            .subscribe(data => this.currentWeather$.next(data))
     }
 
     private transformToICurrentWeather(data: ICurrentWeatherData): ICurrentWeather {
